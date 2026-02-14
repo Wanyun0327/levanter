@@ -234,7 +234,7 @@ def scale_by_biasrms(momentum=0.95, eps=1e-8):
     return optax.GradientTransformation(init_fn, update_fn)
 
 
-def zeropower_via_newtonschulz5(X, steps=10, eps=1e-7):
+def zeropower_via_newtonschulz5(X, eps=1e-7):
     """
     Newton-Schulz iteration to compute the zeroth power / orthogonalization of G.
     """
@@ -245,12 +245,18 @@ def zeropower_via_newtonschulz5(X, steps=10, eps=1e-7):
     if X.shape[0] > X.shape[1]:
         X = X.T
         transpose = True
-    for _ in range(steps):
-        A = X @ X.T
-        B = b * A + c * A @ A
+    # Magic weights makes things smoother    
+    for a, b, c in [
+        (4.0848, -6.8946, 2.9270),
+        (3.9505, -6.3029, 2.6377),
+        (3.7418, -5.5913, 2.3037),
+        (2.8769, -3.1427, 1.2046),
+        (2.8366, -3.0525, 1.2012),
+    ]:
+        A = X @ X.mT
+        B = b * A + c * A @ A 
         X = a * X + B @ X
     if transpose:
         X = X.T
-    # https://x.com/leloykun/status/1874358290093924849
-
+    
     return X
